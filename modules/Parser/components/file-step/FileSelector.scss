@@ -1,0 +1,16 @@
+@import '../../theme.scss';
+
+.CSVImporter_FileSelector {
+  border: 0.25em dashed $fgColor;
+  padding: 4em;
+  border-radius: $borderRadius;
+  background: $fillColor;
+  text-align: center;
+  color: $textColor;
+  cursor: pointer;
+
+  &[data-active='true'] {
+    background: darken($fillColor, 10%);
+    transition: background 0.1s ease-out;
+  }
+}

@@ -1,0 +1,36 @@
+@import '../../theme.scss';
+
+.CSVImporter_FileStep {
+  &__header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.5em;
+    font-size: $titleFontSize;
+    color: $textSecondaryColor;
+  }
+
+  &__headerToggle {
+    display: flex;
+    align-items: center;
+    margin-top: -0.5em; // allow for larger toggle element
+    margin-bottom: -0.5em;
+    margin-left: 1.5em;
+    color: $textColor;
+    cursor: pointer;
+
+    > input[type='checkbox'] {
+      margin-right: 0.5em;
+      width: 1.2em;
+      height: 1.2em;
+      cursor: pointer;
+    }
+  }
+
+  &__mainPendingBlock {
+    display: flex;
+    align-content: center;
+    justify-content: center;
+    padding: 2em;
+    color: $textSecondaryColor;
+  }
+}

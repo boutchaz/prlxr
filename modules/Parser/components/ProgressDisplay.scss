@@ -1,0 +1,46 @@
+
+.CSVImporter_ProgressDisplay {
+  padding: 2em;
+
+  &__status {
+    text-align: center;
+    font-size: $titleFontSize;
+    color: $textColor;
+
+    &.-pending {
+      color: $textSecondaryColor;
+    }
+  }
+
+  &__count {
+    text-align: right;
+    font-size: 1em;
+    color: $textSecondaryColor;
+
+    > var {
+      display: inline-block;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      opacity: 0;
+    }
+  }
+
+  &__progressBar {
+    position: relative; // for indicator
+    width: 100%;
+    height: 0.5em;
+    background: $fillColor;
+  }
+
+  &__progressBarIndicator {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 0; // dynamically set in code
+    height: 100%;
+    background: $textColor;
+
+    transition: width 0.2s ease-out;
+  }
+}

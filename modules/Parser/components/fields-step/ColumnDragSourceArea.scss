@@ -1,0 +1,49 @@
+@import '../../theme.scss';
+
+.CSVImporter_ColumnDragSourceArea {
+  display: flex;
+  margin-top: 0.5em;
+  margin-bottom: 1em;
+
+  &__control {
+    flex: none;
+    display: flex;
+    align-items: center;
+  }
+
+  &__page {
+    position: relative; // for indicator
+    flex: 1 1 0;
+    display: flex;
+    padding-top: 0.5em; // some room for the indicator
+    padding-left: 0.5em; // match interior box spacing
+  }
+
+  &__pageIndicator {
+    position: absolute;
+    top: -0.5em;
+    right: 0;
+    left: 0;
+    text-align: center;
+    font-size: 0.75em;
+  }
+
+  &__pageFiller {
+    flex: 1 1 0;
+    margin-right: 0.5em; // match interior box spacing
+  }
+
+  &__box {
+    position: relative; // for action
+    flex: 1 1 0;
+    margin-right: 0.5em;
+    width: 0; // prevent internal sizing from affecting placement
+  }
+
+  &__boxAction {
+    position: absolute;
+    top: 0; // icon button padding matches card padding
+    right: 0;
+    z-index: 1; // right above content
+  }
+}

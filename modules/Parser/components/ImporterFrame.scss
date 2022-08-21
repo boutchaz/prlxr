@@ -1,0 +1,83 @@
+@import '../theme.scss';
+
+// @todo use em instead of rem
+.CSVImporter_ImporterFrame {
+  border: 1px solid $controlBorderColor;
+  padding: 1.2em;
+  border-radius: $borderRadius;
+  background: $controlBgColor;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    margin-top: -1em; // cancel out button padding
+    margin-bottom: 0.2em;
+    margin-left: -1em;
+  }
+
+  &__headerTitle {
+    padding-bottom: 0.1em; // centering nudge
+    overflow: hidden;
+    font-size: $titleFontSize;
+    color: $textColor;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__headerCrumbSeparator {
+    flex: none;
+    display: flex; // for correct icon alignment
+    margin-right: 0.5em;
+    margin-left: 0.5em;
+    font-size: 1.2em;
+    opacity: 0.5;
+
+    > span {
+      display: block;
+      width: 1em;
+      height: 1em;
+      // MUI ChevronRight
+      background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGZvY3VzYWJsZT0iZmFsc2UiIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZD0iTTEwIDZMOC41OSA3LjQxIDEzLjE3IDEybC00LjU4IDQuNTlMMTAgMThsNi02eiI+PC9wYXRoPjwvc3ZnPg==');
+      background-position: 50% 50%;
+      background-repeat: no-repeat;
+      background-size: cover;
+    }
+  }
+
+  &__headerSubtitle {
+    flex: none;
+    padding-bottom: 0.1em; // centering nudge
+    font-size: $titleFontSize;
+    color: $textColor;
+  }
+
+  &__footer {
+    display: flex;
+    align-items: center;
+
+    margin-top: 1.2em;
+  }
+
+  &__footerFill {
+    flex: 1 1 0;
+  }
+
+  &__footerError {
+    flex: none;
+    line-height: 0.8; // in case of line break
+    color: $errorTextColor;
+    word-break: break-word;
+  }
+
+  &__footerSecondary {
+    flex: none;
+    display: flex; // for more consistent button alignment
+    margin-left: 1em;
+  }
+
+  &__footerNext {
+    flex: none;
+    display: flex; // for more consistent button alignment
+    margin-left: 1em;
+  }
+}

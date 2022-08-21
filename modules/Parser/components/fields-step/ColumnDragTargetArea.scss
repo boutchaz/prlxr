@@ -1,0 +1,55 @@
+@import '../../theme.scss';
+
+.CSVImporter_ColumnDragTargetArea {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+
+  &__box {
+    flex-basis: 25%;
+    flex-grow: 0;
+    flex-shrink: 1;
+    width: 0; // avoid interference from internal width
+    padding-top: 1em; // not using margin for cleaner percentage calculation
+    padding-right: 1em;
+  }
+
+  &__boxLabel {
+    margin-bottom: 0.25em;
+    font-weight: bold;
+    color: $textColor;
+    word-break: break-word;
+
+    & > b {
+      margin-left: 0.25em;
+      color: $errorTextColor;
+    }
+  }
+
+  &__boxValue {
+    position: relative; // for action and placeholder
+    z-index: 0; // contain the z-indexes of contents (to prevent e.g. placeholder being above drag object)
+  }
+
+  &__boxValueAction {
+    position: absolute;
+    top: 0; // icon button padding matches card padding
+    right: 0;
+    z-index: 1; // right above content
+  }
+
+  &__boxPlaceholderHelp {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 1; // right above content
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 98%; // nudge up a bit
+    padding: 0.5em;
+    text-align: center; // in case text wraps
+    color: $textSecondaryColor; // @todo font-size
+  }
+}
