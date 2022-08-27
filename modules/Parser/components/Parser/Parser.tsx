@@ -1,8 +1,11 @@
+import StepsProvider from "../../provider/Stepper.provider";
 import ParserStepper from "../ParserStepper";
 const Parser = () => {
   return (
     <>
-      <ParserStepper></ParserStepper>
+      <StepsProvider>
+        <ParserStepper></ParserStepper>
+      </StepsProvider>
     </>
   );
 };

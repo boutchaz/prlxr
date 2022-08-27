@@ -1,66 +1,110 @@
 import { Button, Group, Stepper } from "@mantine/core";
-import { useState } from "react";
-import { Importer, ImporterField } from '../..';
+import React, { useMemo, useState } from "react";
+import { BaseRow } from "react-csv-importer";
+import {
+  Importer,
+  ImporterField,
+  ImporterFilePreview,
+  ImporterProps,
+} from "../..";
+import useStep from "../../hooks/useStep";
+import { LocaleContext } from "../../locale/LocaleContext";
+import { useSteps } from "../../provider/Stepper.provider";
+import { FieldDef, FieldListSetter } from "../../types";
+import { generatePreviewColumns } from "../fields-step/ColumnPreview";
+import { FieldsStep } from "../fields-step/FieldsStep";
+import { FileSelector } from "../file-step/FileSelector";
+import { FileStep } from "../file-step/FileStep";
+import { ActionTypes } from "../../reducers/stepsReducer";
+import PreviewParser from "../PreviewParser";
+const ParserStepper = <Row extends BaseRow>({
+  children: content,
+}: ImporterProps<Row>) => {
+  const [currentStep, helpers] = useStep(4);
+  const { state, dispatch } = useSteps();
+  const [fields, setFields] = useState<FieldDef[]>([]);
 
-const ParserStepper = () => {
-  const [active, setActive] = useState(0);
-  const nextStep = () =>
-    setActive((current) => (current < 3 ? current + 1 : current));
-  const prevStep = () =>
-    setActive((current) => (current > 0 ? current - 1 : current));
-
+  const FieldDefinitionContext = React.createContext<
+    ((setter: FieldListSetter) => void) | null
+  >(null);
+  const externalPreview = useMemo<ImporterFilePreview | null>(() => {
+    // generate stable externally-visible data objects
+    const externalColumns =
+      state.fileState &&
+      generatePreviewColumns(
+        state.fileState.firstRows,
+        state.fileState.hasHeaders
+      );
+    return (
+      state.fileState &&
+      externalColumns && {
+        rawData: state.fileState.firstChunk,
+        columns: externalColumns,
+        skipHeaders: !state.fileState.hasHeaders,
+        parseWarning: state.fileState.parseWarning,
+      }
+    );
+  }, [state.fileState]);
+  // render provided child content that defines the fields
+  const contentNodes = useMemo(() => {
+    return typeof content === "function"
+      ? content({
+          file: state.fileState && state.fileState.file,
+          preview: externalPreview,
+        })
+      : content;
+  }, [state.fileState, externalPreview, content]);
+  const contentWrap = (
+    <FieldDefinitionContext.Provider value={setFields}>
+      {contentNodes}
+    </FieldDefinitionContext.Provider>
+  );
+  const customPapaParseConfig = {};
+  const assumeNoHeaders = false;
   return (
     <>
-      <Stepper active={active} onStepClick={setActive} breakpoint="sm">
+      <Stepper
+        active={currentStep - 1}
+        onStepClick={helpers.setStep}
+        breakpoint="sm"
+      >
         <Stepper.Step label="First step" description="Import Data">
-          <Importer
-            chunkSize={10000} // optional, internal parsing chunk size in bytes
-            assumeNoHeaders={false} // optional, keeps "data has headers" checkbox off by default
-            restartable={false} // optional, lets user choose to upload another file when import is complete
-            onStart={({ file, fields }) => {
-              // optional, invoked when user has mapped columns and started import
-              console.log(
-                "starting import of file",
-                file,
-                "with fields",
-                fields
-              );
-            }}
-            processChunk={async (rows) => {
-              // required, receives a list of parsed objects based on defined fields and user column mapping;
-              // may be called several times if file is large
-              // (if this callback returns a promise, the widget will wait for it before parsing more data)
-              console.log("received batch of rows", rows);
+          {!state.selectedFile ? (
+            <FileSelector
+              onSelected={(file) =>
+                dispatch({ type: "SET_FILE", payload: file })
+              }
+            />
+          ) : <div>{state.selectedFile.name}</div>}
+          {/* {!state.fieldsAccepted || state.fieldsState === null ? (
+            <>
+              <div className="CSVImporter_Importer">
+                <FieldsStep
+                  fileState={state.fileState}
+                  fields={state.fields}
+                  prevState={state.fieldsState}
+                  onChange={(state) => {
+                    // setFieldsState(state);
+                  }}
+                  onAccept={() => {
+                    // setFieldsAccepted(true);
+                  }}
+                  onCancel={() => {
+                    // keep existing preview data and assignments
+                    // setFileAccepted(false);
+                  }}
+                />
 
-              // mock timeout to simulate processing
-              await new Promise((resolve) => setTimeout(resolve, 500));
-            }}
-            onComplete={({ file, fields }) => {
-              // optional, invoked right after import is done (but user did not dismiss/reset the widget yet)
-              console.log(
-                "finished import of file",
-                file,
-                "with fields",
-                fields
-              );
-            }}
-            onClose={() => {
-              // optional, invoked when import is done and user clicked "Finish"
-              // (if this is not specified, the widget lets the user upload another file)
-              console.log("importer dismissed");
-            }}
-          >
-            <ImporterField name="name" label="Name" />
-            <ImporterField name="email" label="Email" />
-            <ImporterField name="dob" label="Date of Birth" optional />
-            <ImporterField name="postalCode" label="Postal Code" optional />
-          </Importer>
+                {contentWrap}
+              </div>
+            </>
+          ) : null} */}
         </Stepper.Step>
         <Stepper.Step label="Second step" description="Process Data">
-          Step 2 content: Process DataSet
+          <PreviewParser />
         </Stepper.Step>
         <Stepper.Step label="Final step" description="Upload Data">
-          Step 3 content: Upload Data
+       
         </Stepper.Step>
         <Stepper.Completed>
           Completed, click back button to get to previous step
@@ -68,10 +112,21 @@ const ParserStepper = () => {
       </Stepper>
 
       <Group position="center" mt="xl">
-        <Button variant="default" onClick={prevStep}>
+        <Button
+          variant="default"
+          onClick={() => {
+            helpers.goToPrevStep();
+          }}
+        >
           Back
         </Button>
-        <Button onClick={nextStep}>Next step</Button>
+        <Button
+          onClick={() => {
+            helpers.goToNextStep();
+          }}
+        >
+          Next step
+        </Button>
       </Group>
     </>
   );

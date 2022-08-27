@@ -1,8 +1,39 @@
-import React from 'react';
-import { ImporterLocale } from '../locale';
-import { CustomizablePapaParseConfig, ParseCallback, BaseRow } from '../parser';
+import { ImporterLocale } from "react-csv-importer";
+import {
+  FieldAssignmentMap,
+  parsePreview,
+  PreviewResults,
+  PreviewReport,
+  CustomizablePapaParseConfig,
+  BaseRow,
+  ParseCallback,
+} from "../parser";
 
-// information for displaying a spreadsheet-style column
+export interface FieldsStepState {
+  fieldAssignments: FieldAssignmentMap;
+}
+export interface Field {
+  name: string;
+  label: string;
+  isOptional: boolean;
+}
+
+export type FieldDef = Field & { id: number };
+export type FieldListSetter = (prev: FieldDef[]) => FieldDef[];
+export interface FileStepState extends PreviewReport {
+  papaParseConfig: CustomizablePapaParseConfig; // config that was used for preview parsing
+  hasHeaders: boolean;
+  fieldAssignments: FieldAssignmentMap;
+}
+export interface StepsState {
+  currentStep: number;
+  fieldsState: FieldsStepState;
+  fieldsAccepted: boolean;
+  fields: FieldDef[];
+  fileState: FileStepState;
+  fileAccepted: boolean;
+  selectedFile:File | null
+}
 export interface ImporterPreviewColumn {
   index: number; // 0-based position inside spreadsheet
   header?: string; // header, if present

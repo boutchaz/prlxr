@@ -51,10 +51,10 @@ export const FileSelector: React.FC<{ onSelected: (file: File) => void }> = ({
 
         <div>
           <Text size="xl" inline>
-            Drag images here or click to select files
+            <span>{l10n.initialDragDropPrompt}</span>
           </Text>
           <Text size="sm" color="dimmed" inline mt={7}>
-            Attach as many files as you like, each file should not exceed 5mb
+            Attach as many files as you like.
           </Text>
         </div>
       </Group>

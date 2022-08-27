@@ -31,7 +31,7 @@ export type PreviewResults =
       parseError: undefined;
     } & PreviewReport);
 
-export const PREVIEW_ROW_COUNT = 5;
+export const PREVIEW_ROW_COUNT = 20;
 
 export type FieldAssignmentMap = { [name: string]: number | undefined };
 
@@ -191,7 +191,8 @@ function nodeStreamWrapper(stream: ReadableStream, encoding: string): Readable {
 
 export function parsePreview(
   file: File,
-  customConfig: CustomizablePapaParseConfig
+  customConfig: CustomizablePapaParseConfig,
+  previewRecordsLimit:number = PREVIEW_ROW_COUNT
 ): Promise<PreviewResults> {
   // wrap synchronous errors in promise
   return new Promise<PreviewResults>((resolve) => {
@@ -212,7 +213,7 @@ export function parsePreview(
       const isSingleLine = rowAccumulator.length === 1;
 
       // fill preview with blanks if needed
-      while (rowAccumulator.length < PREVIEW_ROW_COUNT) {
+      while (rowAccumulator.length < previewRecordsLimit) {
         rowAccumulator.push([]);
       }
 
@@ -238,7 +239,7 @@ export function parsePreview(
       ...customConfig,
 
       chunkSize: 10000, // not configurable, preview only @todo make configurable
-      preview: PREVIEW_ROW_COUNT,
+      preview: previewRecordsLimit,
 
       error: (error) => {
         resolve({
@@ -264,7 +265,7 @@ export function parsePreview(
 
         // finish parsing once we got enough data, otherwise try for more
         // (in some cases PapaParse flushes out last line as separate chunk)
-        if (rowAccumulator.length >= PREVIEW_ROW_COUNT) {
+        if (rowAccumulator.length >= previewRecordsLimit) {
           nodeStream.pause(); // parser does not pause source stream, do it here explicitly
           parser.abort();
 
@@ -354,6 +355,104 @@ export function processFile<Row extends BaseRow>(
 
         // @todo collect errors
         reportProgress(rows.length);
+
+        // wrap sync errors in promise
+        // (avoid invoking callback if there are no rows to consume)
+        const whenConsumed = new Promise<void>((resolve) => {
+          const result = rows.length ? callback(rows, info) : undefined;
+
+          // introduce delay to allow a frame render
+          setTimeout(() => resolve(result), 0);
+        });
+
+        // unpause parsing when done
+        whenConsumed.then(
+          () => {
+            nodeStream.resume();
+            parser.resume();
+          },
+          () => {
+            // @todo collect errors
+            nodeStream.resume();
+            parser.resume();
+          }
+        );
+      },
+      complete: () => {
+        resolve();
+      }
+    });
+  });
+}
+
+export function excludeColumns<Row extends BaseRow>(
+  input: ParserInput,
+  columns:string[],
+  callback: ParseCallback<Row>
+): Promise<void> {
+  const { file, hasHeaders, papaParseConfig } = input;
+  let fieldAssignments = {
+    'ResponseId': 0,
+    'Employement':2
+  }
+  const fieldNames = fieldAssignments ? Object.keys(fieldAssignments) : [];
+  // wrap synchronous errors in promise
+  return new Promise<void>((resolve, reject) => {
+    // skip first line if needed
+    let skipLine = hasHeaders;
+    let processedCount = 0;
+
+    // use our own multibyte-safe decoding streamer
+    // @todo wait for upstream multibyte fix in PapaParse: https://github.com/mholt/PapaParse/issues/908
+    const nodeStream = nodeStreamWrapper(
+      streamForBlob(file),
+      papaParseConfig.encoding || 'utf-8'
+    );
+
+    Papa.parse(nodeStream, {
+      ...papaParseConfig,
+      chunkSize: papaParseConfig.chunkSize || 10000, // our own preferred default
+
+      error: (error) => {
+        reject(error);
+      },
+      chunk: ({ data }, parser) => {
+        // pause to wait until the rows are consumed
+        nodeStream.pause(); // parser does not pause source stream, do it here explicitly
+        parser.pause();
+
+        const skipped = skipLine && data.length > 0;
+
+        const rows = (skipped ? data.slice(1) : data).map((row) => {
+          const stringRow = (row as unknown[]).map((item) =>
+            typeof item === 'string' ? item : ''
+          );
+
+          const record = {} as { [name: string]: string | undefined };
+          fieldNames.forEach((fieldName) => {
+            const columnIndex = fieldAssignments[fieldName];
+            if (columnIndex !== undefined) {
+              record[fieldName] = stringRow[columnIndex];
+            }
+          });
+
+          return record as Row; // @todo look into a more precise setup
+        });
+
+        // clear line skip flag if there was anything to skip
+        if (skipped) {
+          skipLine = false;
+        }
+
+        // info snapshot for processing callback
+        const info = {
+          startIndex: processedCount
+        };
+
+        processedCount += rows.length;
+
+        // @todo collect errors
+        // reportProgress(rows.length);
 
         // wrap sync errors in promise
         // (avoid invoking callback if there are no rows to consume)
